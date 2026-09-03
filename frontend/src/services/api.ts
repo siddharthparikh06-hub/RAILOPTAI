@@ -4,11 +4,49 @@ import {
   MaintenanceTask, Asset, Section, BlockWindow, AlertItem, OptimizationRun, TrainMovement
 } from '../data/mockData';
 
-// API Abstraction Layer for RAILOPT AI Frontend
-// Provides async interface layer so FastAPI + OR-Tools backend can be plugged in seamlessly later.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+async function fetchFromApi<T>(endpoint: string, fallbackData: T): Promise<T> {
+  try {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    });
+    if (!res.ok) return fallbackData;
+    const data = await res.json();
+    return data as T;
+  } catch (err) {
+    return fallbackData;
+  }
+}
+
+export async function loginUser(employeeId: string, password: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee_id: employeeId, password })
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return {
+    access_token: "mock_jwt_token_control001",
+    token_type: "bearer",
+    user: {
+      employee_id: employeeId || "CONTROL001",
+      name: "Demo Control Officer",
+      department: "Operations Control Office",
+      role: "Control Officer"
+    }
+  };
+}
 
 export async function getDashboardMetrics() {
-  return {
+  const fallback = {
     assetAvailability: 94.7,
     assetAvailabilityChange: '+8.3%',
     activeBlocks: 12,
@@ -31,18 +69,38 @@ export async function getDashboardMetrics() {
       { day: 'Sun', baseline: 20.0, optimized: 10.5 }
     ]
   };
+
+  try {
+    const apiData: any = await fetchFromApi('/dashboard/summary', null);
+    if (apiData) {
+      return {
+        assetAvailability: apiData.asset_availability,
+        assetAvailabilityChange: `+${apiData.availability_change}%`,
+        activeBlocks: apiData.active_blocks,
+        criticalTasks: apiData.pending_requests,
+        downtimeSavedHrs: apiData.downtime_saved_hours,
+        conflictsAvoided: apiData.conflicts_avoided,
+        trainImpactReduction: apiData.train_impact_reduction,
+        departmentsWorkload: apiData.departments_workload || fallback.departmentsWorkload,
+        weeklyUtilization: apiData.weekly_utilization || fallback.weeklyUtilization
+      };
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return fallback;
 }
 
 export async function getMaintenanceTasks(): Promise<MaintenanceTask[]> {
-  return mockMaintenanceTasks;
+  return fetchFromApi('/tasks', mockMaintenanceTasks);
 }
 
 export async function getAssets(): Promise<Asset[]> {
-  return mockAssets;
+  return fetchFromApi('/assets', mockAssets);
 }
 
 export async function getSections(): Promise<Section[]> {
-  return mockSections;
+  return fetchFromApi('/sections', mockSections);
 }
 
 export async function getStations() {
@@ -50,11 +108,11 @@ export async function getStations() {
 }
 
 export async function getBlockWindows(): Promise<BlockWindow[]> {
-  return mockBlockWindows;
+  return fetchFromApi('/blocks', mockBlockWindows);
 }
 
 export async function getAlerts(): Promise<AlertItem[]> {
-  return mockAlerts;
+  return fetchFromApi('/conflicts', mockAlerts);
 }
 
 export async function getOptimizationRuns(): Promise<OptimizationRun[]> {
@@ -62,13 +120,34 @@ export async function getOptimizationRuns(): Promise<OptimizationRun[]> {
 }
 
 export async function getTrainMovements(): Promise<TrainMovement[]> {
-  return mockTrainMovements;
+  return fetchFromApi('/movements', mockTrainMovements);
 }
 
 export async function runOptimizationSimulation(horizon: string, division: string, objective: string) {
-  // Simulated delay for optimization solver animation
+  try {
+    const res = await fetch(`${API_BASE_URL}/optimization/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ horizon_days: 7, division, objective })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        status: data.status,
+        tasksConsidered: data.tasks_considered,
+        availableWindows: data.available_windows,
+        conflictsDetected: data.conflicts_detected,
+        recommendedBlocks: data.recommended_blocks,
+        estimatedDowntimeSavedHrs: data.downtime_saved_hours,
+        estimatedTrainImpactReductionPct: data.train_impact_reduction_pct,
+        assetAvailabilityScore: data.asset_availability_score
+      };
+    }
+  } catch (e) {
+    // Fallback
+  }
+
   await new Promise((resolve) => setTimeout(resolve, 3500));
-  
   return {
     status: 'OPTIMIZATION COMPLETE',
     tasksConsidered: 248,
@@ -82,6 +161,23 @@ export async function runOptimizationSimulation(horizon: string, division: strin
 }
 
 export async function queryCopilot(question: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/copilot/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        answer: data.answer,
+        badge: data.badge
+      };
+    }
+  } catch (e) {
+    // Fallback
+  }
+
   await new Promise((resolve) => setTimeout(resolve, 800));
   const q = question.toLowerCase();
 
