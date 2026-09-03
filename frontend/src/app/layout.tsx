@@ -1,0 +1,29 @@
+import type { Metadata } from 'next';
+import './globals.css';
+import Sidebar from '@/components/Sidebar';
+import Topbar from '@/components/Topbar';
+
+export const metadata: Metadata = {
+  title: 'RAILOPT AI — AI-Powered Railway Maintenance & Block Optimization',
+  description: 'AI-Powered Automatic Block Planning to Maximize Asset Availability for Train Operations on Indian Railways (SIH 2026 SIH26027)',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="dark">
+      <body className="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+        <Topbar />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto bg-slate-950 p-4 lg:p-6">
+            {children}
+          </main>
+        </div>
+      </body>
+    </html>
+  );
+}
