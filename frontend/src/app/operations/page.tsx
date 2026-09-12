@@ -1,15 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Activity, MapPin, AlertTriangle, Search, Clock, ShieldAlert } from 'lucide-react';
 import RailwayMap from '@/components/RailwayMap';
 import StatusBadge from '@/components/StatusBadge';
 import BlockTimeline from '@/components/BlockTimeline';
-import { mockSections, mockAlerts } from '@/data/mockData';
+import {
+  mockAlerts,
+  mockAssets,
+  mockBlockWindows,
+  mockConflicts,
+  mockMaintenanceTasks,
+  mockTrainMovements,
+  mockSections,
+  mockStations,
+} from '@/data/mockData';
 
 export default function OperationsControlCenter() {
   const [selectedSec, setSelectedSec] = useState(mockSections[2]);
   const [search, setSearch] = useState('');
+  const selectedData = useMemo(() => {
+    const sectionId = selectedSec.id;
+    return {
+      stations: mockStations.filter((station) => selectedSec.stationIds.includes(station.id)),
+      trains: mockTrainMovements.filter((movement) => movement.sectionId === sectionId),
+      blocks: mockBlockWindows.filter((block) => block.sectionId === sectionId),
+      tasks: mockMaintenanceTasks.filter((task) => task.sectionId === sectionId),
+      assets: mockAssets.filter((asset) => asset.sectionId === sectionId),
+      conflicts: mockConflicts.filter((conflict) => conflict.sectionId === sectionId && conflict.status === 'Active'),
+      alerts: mockAlerts.filter((alert) => alert.sectionId === sectionId && alert.status === 'Active'),
+    };
+  }, [selectedSec]);
+
+  const visibleSections = mockSections.filter((section) =>
+    `${section.code} ${section.name}`.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-4">
@@ -50,7 +75,7 @@ export default function OperationsControlCenter() {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
-            {mockSections.map((sec) => (
+            {visibleSections.map((sec) => (
               <div
                 key={sec.id}
                 onClick={() => setSelectedSec(sec)}
@@ -76,7 +101,14 @@ export default function OperationsControlCenter() {
 
         {/* CENTER: SVG Schematic Railway Map (6 cols) */}
         <div className="lg:col-span-6">
-          <RailwayMap />
+          <RailwayMap
+            section={selectedSec}
+            stations={selectedData.stations}
+            trains={selectedData.trains}
+            blocks={selectedData.blocks}
+            tasks={selectedData.tasks}
+            conflicts={selectedData.conflicts}
+          />
         </div>
 
         {/* RIGHT: Alerts Feed (3 cols) */}
@@ -86,11 +118,30 @@ export default function OperationsControlCenter() {
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
               Live Corridor Alerts
             </span>
-            <span className="text-emerald-400 font-bold text-[10px]">3 ACTIVE</span>
+            <span className="text-emerald-400 font-bold text-[10px]">{selectedData.alerts.length} ACTIVE</span>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
-            {mockAlerts.map((al) => (
+            <div className="rounded-lg border border-amber-500/20 bg-amber-950/10 p-2.5 space-y-2">
+              <div className="flex items-center justify-between font-mono text-[10px]">
+                <span className="font-bold text-amber-400">ACTIVE CONFLICTS</span>
+                <span className="text-slate-400">{selectedData.conflicts.length}</span>
+              </div>
+              {selectedData.conflicts.length === 0 ? (
+                <p className="text-[11px] text-slate-400">No active conflicts detected for this corridor.</p>
+              ) : selectedData.conflicts.map((conflict) => (
+                <div key={conflict.id} className="border-t border-amber-500/10 pt-2 space-y-1">
+                  <StatusBadge status={conflict.severity} />
+                  <div className="font-semibold text-slate-200 leading-snug">{conflict.title}</div>
+                  <p className="text-[11px] text-slate-400 leading-tight">{conflict.description}</p>
+                </div>
+              ))}
+            </div>
+            {selectedData.alerts.length === 0 ? (
+              <div className="rounded-lg border border-slate-800 bg-slate-950 p-4 text-center text-[11px] text-slate-400">
+                No active alerts for {selectedSec.code}.
+              </div>
+            ) : selectedData.alerts.map((al) => (
               <div key={al.id} className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-1.5">
                 <div className="flex items-center justify-between font-mono text-[10px]">
                   <StatusBadge status={al.severity} />
@@ -105,7 +156,13 @@ export default function OperationsControlCenter() {
       </div>
 
       {/* BOTTOM: Timeline */}
-      <BlockTimeline />
+      <BlockTimeline
+        section={selectedSec}
+        blocks={selectedData.blocks}
+        tasks={selectedData.tasks}
+        trains={selectedData.trains}
+        conflicts={selectedData.conflicts}
+      />
     </div>
   );
 }
