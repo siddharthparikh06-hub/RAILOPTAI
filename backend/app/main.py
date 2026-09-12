@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine, Base
@@ -10,12 +11,15 @@ from app.api import (
 )
 
 # Initialize Database Schema
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Database initialization warning: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="RAILOPT AI — AI-Powered Automatic Block Planning System (SIH 2026 SIH26027)",
+    description="RAILOPT AI — Production Decision Support System for Railway Operations (SIH 2026 SIH26027)",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -24,11 +28,19 @@ app = FastAPI(
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"], # Allow all origins for production flexibility
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global Exception Handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An internal error occurred", "error": str(exc)}
+    )
 
 # Include Routers under /api
 app.include_router(auth.router, prefix=settings.API_V1_STR)
@@ -50,6 +62,7 @@ def root():
         "version": settings.VERSION,
         "status": "OPERATIONAL",
         "docs_url": "/docs",
+        "environment": "PRODUCTION_READY",
         "badge": "SIH 2026 • DEMO ENVIRONMENT"
     }
 

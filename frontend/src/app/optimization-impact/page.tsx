@@ -34,6 +34,11 @@ export default function OptimizationImpactPage() {
         </div>
       </div>
 
+      <div className="space-y-1">
+        <h2 className="text-lg font-bold text-white">Before vs After AI</h2>
+        <p className="text-xs text-slate-400">Operational outcomes before and after coordinated RAILOPT AI planning</p>
+      </div>
+
       {/* Side-by-Side Comparison Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* BEFORE CARD */}
@@ -124,6 +129,30 @@ export default function OptimizationImpactPage() {
               <span className="text-xl font-bold text-emerald-400">94.7% <span className="text-xs text-emerald-500">(+8.3%)</span></span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-white">Impact Across Key Measures</h3>
+            <p className="text-[11px] text-slate-400">Lower is better for workload and disruption; higher is better for availability and completion</p>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] font-mono shrink-0">
+            <span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-500" />Before</span>
+            <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500" />After AI</span>
+          </div>
+        </div>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={comparisonData} margin={{ top: 8, right: 8, left: -16, bottom: 8 }}>
+              <XAxis dataKey="metric" stroke="#64748B" fontSize={10} tickLine={false} interval={0} angle={-18} textAnchor="end" height={54} />
+              <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#0F172A', borderColor: '#1E293B', borderRadius: '10px', fontSize: '11px' }} />
+              <Bar dataKey="before" name="Before AI" fill="#F43F5E" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="after" name="After AI" fill="#10B981" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

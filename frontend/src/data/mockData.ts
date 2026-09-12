@@ -19,6 +19,7 @@ export interface Section {
   trafficDensity: 'Low' | 'Medium' | 'High';
   activeTasks: number;
   nextWindow: string;
+  stationIds: string[];
 }
 
 export interface Station {
@@ -112,6 +113,24 @@ export interface AlertItem {
   status: 'Active' | 'Resolved';
 }
 
+export interface CorridorConflict {
+  id: string;
+  sectionId: string;
+  severity: 'Critical' | 'High' | 'Medium';
+  conflictType: string;
+  title: string;
+  description: string;
+  trainNo?: string;
+  sectionLabel?: string;
+  blockCode?: string;
+  blockTime?: string;
+  recommendation?: string;
+  recommendedTime?: string;
+  expectedDelayAvoidedMin?: number;
+  canApplyRecommendation?: boolean;
+  status: 'Active' | 'Resolved';
+}
+
 export interface OptimizationRun {
   runId: string;
   date: string;
@@ -139,10 +158,10 @@ export const mockStations: Station[] = [
 ];
 
 export const mockSections: Section[] = [
-  { id: 'S-10', code: 'S-10', name: 'Section MAS-AJJ Mainline', startStation: 'MAS', endStation: 'AJJ', lengthKm: 68.5, status: 'Operational', trafficDensity: 'High', activeTasks: 3, nextWindow: '01:30–04:30' },
-  { id: 'S-12', code: 'S-12', name: 'Section AJJ-KPD Trunk Corridor', startStation: 'AJJ', endStation: 'KPD', lengthKm: 61.0, status: 'Operational', trafficDensity: 'High', activeTasks: 5, nextWindow: '12:00–14:00' },
-  { id: 'S-14', code: 'S-14', name: 'Section KPD-JTJ High Density Line', startStation: 'KPD', endStation: 'JTJ', lengthKm: 84.2, status: 'Maintenance Window', trafficDensity: 'Medium', activeTasks: 6, nextWindow: '15:00–18:00' },
-  { id: 'S-18', code: 'S-18', name: 'Section JTJ-SA Express Line', startStation: 'JTJ', endStation: 'SA', lengthKm: 120.4, status: 'Operational', trafficDensity: 'Low', activeTasks: 4, nextWindow: '14:00–17:00' },
+  { id: 'S-10', code: 'S-10', name: 'Section MAS-AJJ Mainline', startStation: 'MAS', endStation: 'AJJ', lengthKm: 68.5, status: 'Operational', trafficDensity: 'High', activeTasks: 3, nextWindow: '01:30–04:30', stationIds: ['st-a', 'st-b'] },
+  { id: 'S-12', code: 'S-12', name: 'Section AJJ-KPD Trunk Corridor', startStation: 'AJJ', endStation: 'KPD', lengthKm: 61.0, status: 'Operational', trafficDensity: 'High', activeTasks: 5, nextWindow: '12:00–14:00', stationIds: ['st-b', 'st-c'] },
+  { id: 'S-14', code: 'S-14', name: 'Section KPD-JTJ High Density Line', startStation: 'KPD', endStation: 'JTJ', lengthKm: 84.2, status: 'Maintenance Window', trafficDensity: 'Medium', activeTasks: 6, nextWindow: '15:00–18:00', stationIds: ['st-c', 'st-d'] },
+  { id: 'S-18', code: 'S-18', name: 'Section JTJ-SA Express Line', startStation: 'JTJ', endStation: 'SA', lengthKm: 120.4, status: 'Operational', trafficDensity: 'Low', activeTasks: 4, nextWindow: '14:00–17:00', stationIds: ['st-d', 'st-e'] },
 ];
 
 export const mockAssets: Asset[] = [
@@ -325,6 +344,172 @@ export const mockAlerts: AlertItem[] = [
     sectionId: 'S-12',
     timestamp: '2 hours ago',
     status: 'Resolved'
+  },
+  {
+    id: 'alt-105',
+    severity: 'Information',
+    title: 'Night maintenance window confirmed for S-10',
+    description: 'Transformer TR-03 maintenance is planned during the next low-traffic window.',
+    sectionId: 'S-10',
+    timestamp: '3 hours ago',
+    status: 'Active'
+  },
+  {
+    id: 'alt-106',
+    severity: 'High',
+    title: 'OHE inspection window approaching on S-12',
+    description: 'OHE-27 inspection should be completed during the 12:00–14:00 corridor window.',
+    sectionId: 'S-12',
+    timestamp: '45 mins ago',
+    status: 'Active'
+  }
+];
+
+export const mockConflicts: CorridorConflict[] = [
+  {
+    id: 'conf-train-block-10',
+    sectionId: 'S-10',
+    severity: 'High',
+    conflictType: 'Train vs Maintenance Block',
+    title: 'Train movement overlaps maintenance block',
+    description: 'Train 12671 is scheduled through the MAS-AJJ corridor during the requested maintenance window.',
+    trainNo: '12671',
+    sectionLabel: 'MAS → AJJ',
+    blockCode: 'B-104',
+    blockTime: '11:30–13:00',
+    recommendation: 'Move block to',
+    recommendedTime: '13:15–14:45',
+    expectedDelayAvoidedMin: 11,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-team-12',
+    sectionId: 'S-12',
+    severity: 'High',
+    conflictType: 'Team Resource Collision',
+    title: 'Two maintenance teams assigned to the same resource',
+    description: 'Traction and Engineering requests require the same inspection crew during the AJJ-KPD window.',
+    sectionLabel: 'AJJ → KPD',
+    blockCode: 'B-108',
+    blockTime: '12:00–14:00',
+    recommendation: 'Move the Engineering task to the next available crew slot',
+    recommendedTime: '14:15–16:15',
+    expectedDelayAvoidedMin: 8,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-block-14',
+    sectionId: 'S-14',
+    severity: 'Critical',
+    conflictType: 'Block vs Block Overlap',
+    title: 'Two blocks overlap the same section',
+    description: 'Engineering and S&T blocks compete for the KPD-JTJ protected track window.',
+    sectionLabel: 'KPD → JTJ',
+    blockCode: 'B-113',
+    blockTime: '15:00–18:00',
+    recommendation: 'Combine compatible work into one protected block',
+    recommendedTime: '15:00–18:00',
+    expectedDelayAvoidedMin: 15,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-crew-18',
+    sectionId: 'S-18',
+    severity: 'High',
+    conflictType: 'Insufficient Crew Availability',
+    title: 'Insufficient crew availability for maintenance task',
+    description: 'Task TASK-1112 requires 8 crew members, but only 6 Engineering crew members are available.',
+    sectionLabel: 'JTJ → SA',
+    recommendation: 'Assign an additional Engineering crew or defer the task',
+    recommendedTime: 'Next available Engineering shift',
+    expectedDelayAvoidedMin: 0,
+    canApplyRecommendation: false,
+    status: 'Active'
+  },
+  {
+    id: 'conf-window-18',
+    sectionId: 'S-18',
+    severity: 'Medium',
+    conflictType: 'Duration Exceeds Available Window',
+    title: 'Maintenance duration exceeds available window',
+    description: 'The 4-hour track alignment task cannot fit inside the available 3-hour JTJ-SA window.',
+    sectionLabel: 'JTJ → SA',
+    blockTime: '14:00–17:00',
+    recommendation: 'Split the task across two approved maintenance windows',
+    recommendedTime: '14:00–16:00 across two shifts',
+    expectedDelayAvoidedMin: 0,
+    canApplyRecommendation: false,
+    status: 'Active'
+  },
+  {
+    id: 'conf-late-14',
+    sectionId: 'S-14',
+    severity: 'Critical',
+    conflictType: 'Critical Task Scheduled Too Late',
+    title: 'Critical signal task is scheduled too late',
+    description: 'TASK-1042 is due today and must be completed before the next high-density operating period.',
+    trainNo: '20608',
+    sectionLabel: 'KPD → JTJ',
+    blockCode: 'B-113',
+    blockTime: '15:00–18:00',
+    recommendation: 'Move critical task into the next protected block',
+    recommendedTime: '15:00–18:00',
+    expectedDelayAvoidedMin: 18,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-train-block-14',
+    sectionId: 'S-14',
+    severity: 'High',
+    conflictType: 'Train vs Maintenance Block',
+    title: 'Train movement overlaps active block B-113',
+    description: 'Train 12622 requires rerouting during the KPD-JTJ maintenance window.',
+    trainNo: '12622',
+    sectionLabel: 'KPD → JTJ',
+    blockCode: 'B-113',
+    blockTime: '15:00–18:00',
+    recommendation: 'Move block to',
+    recommendedTime: '18:15–21:15',
+    expectedDelayAvoidedMin: 8,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-team-14',
+    sectionId: 'S-14',
+    severity: 'High',
+    conflictType: 'Team Resource Collision',
+    title: 'Two maintenance teams share an unavailable crew',
+    description: 'The combined B-113 plan requests more Signal & Telecom crew capacity than is available.',
+    sectionLabel: 'KPD → JTJ',
+    blockCode: 'B-113',
+    blockTime: '15:00–18:00',
+    recommendation: 'Move the Point Machine task to the next S&T shift',
+    recommendedTime: '18:30–20:30',
+    expectedDelayAvoidedMin: 6,
+    canApplyRecommendation: true,
+    status: 'Active'
+  },
+  {
+    id: 'conf-legacy-12',
+    sectionId: 'S-12',
+    severity: 'High',
+    conflictType: 'Train vs Maintenance Block',
+    title: 'OHE inspection overlaps freight path',
+    description: 'Freight movement G-7710 requires a protected path around the S-12 work window.',
+    trainNo: 'G-7710',
+    sectionLabel: 'AJJ → KPD',
+    blockCode: 'B-108',
+    blockTime: '12:00–14:00',
+    recommendation: 'Move block to',
+    recommendedTime: '14:15–16:15',
+    expectedDelayAvoidedMin: 12,
+    canApplyRecommendation: true,
+    status: 'Active'
   }
 ];
 
@@ -335,6 +520,9 @@ export const mockOptimizationRuns: OptimizationRun[] = [
 ];
 
 export const mockTrainMovements: TrainMovement[] = [
+  { id: 'tm-0', trainId: 't-12675', trainNo: '12675', trainName: 'Kovai Express', sectionId: 'S-10', scheduledTime: '07:40', expectedDelayMin: 0, rerouted: false, passengerImpact: 'Low', goodsImpact: 'Low' },
+  { id: 'tm-4', trainId: 't-12001', trainNo: '12001', trainName: 'Shatabdi Express', sectionId: 'S-12', scheduledTime: '12:20', expectedDelayMin: 3, rerouted: false, passengerImpact: 'Medium', goodsImpact: 'Low' },
+  { id: 'tm-5', trainId: 't-freight-12', trainNo: 'G-7710', trainName: 'Container Freight', sectionId: 'S-12', scheduledTime: '13:10', expectedDelayMin: 12, rerouted: true, reroutePath: 'Loop Line L-04', passengerImpact: 'Low', goodsImpact: 'High' },
   { id: 'tm-1', trainId: 't-12002', trainNo: '20608', trainName: 'Vande Bharat Express', sectionId: 'S-14', scheduledTime: '15:15', expectedDelayMin: 0, rerouted: false, passengerImpact: 'Low', goodsImpact: 'Low' },
   { id: 'tm-2', trainId: 't-12302', trainNo: '12622', trainName: 'Tamil Nadu Express', sectionId: 'S-14', scheduledTime: '16:00', expectedDelayMin: 8, rerouted: true, reroutePath: 'Via Loop Line L-02', passengerImpact: 'Low', goodsImpact: 'Medium' },
   { id: 'tm-3', trainId: 't- freight', trainNo: 'G-9021', trainName: 'Coal Freight Rake', sectionId: 'S-14', scheduledTime: '16:45', expectedDelayMin: 25, rerouted: true, reroutePath: 'Siding Track S-01', passengerImpact: 'Low', goodsImpact: 'Medium' },

@@ -10,9 +10,11 @@ class User(Base):
     employee_id = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     department = Column(String, nullable=False)
-    role = Column(String, nullable=False)
+    role = Column(String, nullable=False) # ENGINEERING, TRACTION, SIGNAL_TELECOM
+    is_active = Column(Boolean, default=True)
     password_hash = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Section(Base):
     __tablename__ = "sections"
@@ -107,7 +109,7 @@ class TrainMovement(Base):
     scheduled_arrival = Column(String, nullable=False)
     scheduled_departure = Column(String, nullable=False)
     direction = Column(String, default="UP")
-    train_type = Column(String, default="Express") # Vande Bharat, Rajdhani, Express, Goods
+    train_type = Column(String, default="Express")
     priority = Column(Integer, default=1)
     expected_delay_min = Column(Integer, default=0)
     rerouted = Column(Boolean, default=False)
@@ -137,7 +139,7 @@ class Conflict(Base):
     block_id = Column(String, nullable=True)
     train_movement_id = Column(String, nullable=True)
     section_id = Column(String, nullable=False)
-    conflict_type = Column(String, nullable=False) # Block-vs-Block, Block-vs-Train, Resource
+    conflict_type = Column(String, nullable=False)
     severity = Column(String, default="High")
     description = Column(Text, nullable=True)
     delay_minutes = Column(Integer, default=0)

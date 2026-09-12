@@ -1,0 +1,39 @@
+# ==========================================
+# RAILOPT AI Backend .gitignore
+# ==========================================
+
+# Environment secrets
+.env
+
+# Python bytecode & cache
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Database & SQLite files
+*.db
+*.sqlite
+*.sqlite3
+railopt_demo.db
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

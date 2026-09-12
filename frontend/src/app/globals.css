@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @layer base {
   :root {
     --background: 220 33% 98%;
@@ -21,7 +23,24 @@
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white min-h-screen;
+  @apply bg-slate-950 text-slate-100 antialiased selection:bg-blue-600 selection:text-white min-h-screen;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  background-color: #080e18;
+  background-image: linear-gradient(rgba(51, 65, 85, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(51, 65, 85, 0.08) 1px, transparent 1px), radial-gradient(circle at 85% 0%, rgba(14, 116, 144, 0.13), transparent 32rem);
+  background-size: 32px 32px, 32px 32px, auto;
+}
+
+button, a, input { -webkit-tap-highlight-color: transparent; }
+
+@layer components {
+  .control-panel {
+    @apply border border-slate-800/90 bg-slate-900/80 shadow-xl shadow-black/10 backdrop-blur-xl;
+  }
+}
+
+@media (max-width: 767px) {
+  body { overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
 }
 
 /* Scrollbar styling for enterprise command room look */

@@ -1,63 +1,91 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from app.db.schemas import LoginRequest, TokenResponse, UserProfile
-from app.core.security import create_access_token, decode_access_token
+from app.db.schemas import LoginRequest, TokenResponse, UserProfile, UserRole
+from app.core.security import create_access_token
+from app.core.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
-def get_current_user(token: str = Depends(oauth2_scheme)) -> UserProfile:
-    payload = decode_access_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired authentication token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return UserProfile(
-        employee_id=payload.get("sub", "CONTROL001"),
-        name=payload.get("name", "Demo Control Officer"),
-        department=payload.get("department", "Operations Control Office"),
-        role=payload.get("role", "Control Officer")
-    )
+DEMO_USERS = {
+    "ENG001": {
+        "name": "Demo Engineering Officer",
+        "department": "Engineering / P-Way",
+        "role": UserRole.ENGINEERING,
+        "password": "demo123"
+    },
+    "TRD001": {
+        "name": "Demo Traction Officer",
+        "department": "Traction Distribution / OHE",
+        "role": UserRole.TRACTION,
+        "password": "demo123"
+    },
+    "SNT001": {
+        "name": "Demo Signal & Telecom Officer",
+        "department": "Signal & Telecommunication / S&T",
+        "role": UserRole.SIGNAL_TELECOM,
+        "password": "demo123"
+    },
+    "CONTROL001": {
+        "name": "Demo Control Officer",
+        "department": "Operations Control Office",
+        "role": UserRole.ENGINEERING,
+        "password": "demo123"
+    }
+}
 
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest):
-    # Accept CONTROL001 demo user or any valid credentials for SIH demo
-    if request.employee_id.upper() == "CONTROL001" and request.password in ["demo123", "password", "demo"]:
-        user_profile = UserProfile(
-            employee_id="CONTROL001",
-            name="Demo Control Officer",
-            department="Operations Control Office",
-            role="Control Officer"
-        )
-        token = create_access_token(
-            subject=user_profile.employee_id,
-            claims={
-                "name": user_profile.name,
-                "department": user_profile.department,
-                "role": user_profile.role
-            }
-        )
-        return TokenResponse(access_token=token, token_type="bearer", user=user_profile)
+    emp_id = request.employee_id.upper()
     
-    # Generic fallback token for demo user testing
-    user_profile = UserProfile(
-        employee_id=request.employee_id,
-        name=f"Officer {request.employee_id}",
-        department="Operations Control Office",
-        role="Control Officer"
+    if emp_id in DEMO_USERS:
+        u_info = DEMO_USERS[emp_id]
+        if request.password in [u_info["password"], "demo", "password"]:
+            profile = UserProfile(
+                id=f"usr-{emp_id.lower()}",
+                employee_id=emp_id,
+                name=u_info["name"],
+                department=u_info["department"],
+                role=u_info["role"],
+                is_active=True
+            )
+            token = create_access_token(
+                subject=profile.employee_id,
+                claims={
+                    "id": profile.id,
+                    "name": profile.name,
+                    "department": profile.department,
+                    "role": profile.role.value
+                }
+            )
+            return TokenResponse(access_token=token, token_type="bearer", user=profile)
+
+    # Dynamic account authentication for testing
+    role = UserRole.ENGINEERING
+    dept = "Engineering / P-Way"
+    if "TRD" in emp_id or "TRACTION" in emp_id:
+        role = UserRole.TRACTION
+        dept = "Traction Distribution / OHE"
+    elif "SNT" in emp_id or "SIGNAL" in emp_id:
+        role = UserRole.SIGNAL_TELECOM
+        dept = "Signal & Telecommunication / S&T"
+        
+    profile = UserProfile(
+        id=f"usr-{emp_id.lower()}",
+        employee_id=emp_id,
+        name=f"Officer {emp_id}",
+        department=dept,
+        role=role,
+        is_active=True
     )
     token = create_access_token(
-        subject=user_profile.employee_id,
+        subject=profile.employee_id,
         claims={
-            "name": user_profile.name,
-            "department": user_profile.department,
-            "role": user_profile.role
+            "id": profile.id,
+            "name": profile.name,
+            "department": profile.department,
+            "role": profile.role.value
         }
     )
-    return TokenResponse(access_token=token, token_type="bearer", user=user_profile)
+    return TokenResponse(access_token=token, token_type="bearer", user=profile)
 
 @router.post("/logout")
 def logout():

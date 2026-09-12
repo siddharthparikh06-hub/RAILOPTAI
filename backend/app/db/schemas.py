@@ -1,6 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 from datetime import datetime
+from enum import Enum
+
+class UserRole(str, Enum):
+    ENGINEERING = "ENGINEERING"
+    TRACTION = "TRACTION"
+    SIGNAL_TELECOM = "SIGNAL_TELECOM"
 
 # --- Auth Schemas ---
 class LoginRequest(BaseModel):
@@ -8,10 +14,12 @@ class LoginRequest(BaseModel):
     password: str
 
 class UserProfile(BaseModel):
+    id: Optional[str] = None
     employee_id: str
     name: str
     department: str
-    role: str
+    role: UserRole
+    is_active: bool = True
 
 class TokenResponse(BaseModel):
     access_token: str

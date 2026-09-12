@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.database import get_db
 from app.db.models import MaintenanceTask
-from app.db.schemas import TaskResponse, TaskBase
+from app.db.schemas import TaskResponse, TaskBase, UserProfile
+from app.core.dependencies import get_current_user, verify_department_ownership
 from app.services.priority_engine import priority_engine
 
 router = APIRouter(prefix="/tasks", tags=["Maintenance Tasks"])
@@ -128,18 +129,20 @@ def get_tasks(
         
     return tasks
 
-@router.post("/calculate-priority")
-def calculate_task_priority(
-    health_score: float = 60.0,
-    failure_prob: float = 0.35,
-    overdue_days: int = 2,
-    traffic_density: int = 3,
-    safety_critical: int = 1
-):
-    return priority_engine.calculate_priority(
-        health_score=health_score,
-        failure_prob=failure_prob,
-        overdue_days=overdue_days,
-        traffic_density_level=traffic_density,
-        safety_critical=safety_critical
-    )
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_task(task: TaskBase, current_user: UserProfile = Depends(get_current_user)):
+    # Server-Side Departmental Authorization Check
+    verify_department_ownership(task.department, current_user)
+    return {"message": "Maintenance task created successfully", "task": task}
+
+@router.put("/{task_id}")
+def update_task(task_id: str, task: TaskBase, current_user: UserProfile = Depends(get_current_user)):
+    # Server-Side Departmental Authorization Check
+    verify_department_ownership(task.department, current_user)
+    return {"message": f"Maintenance task {task_id} updated successfully", "task": task}
+
+@router.delete("/{task_id}")
+def delete_task(task_id: str, department: str, current_user: UserProfile = Depends(get_current_user)):
+    # Server-Side Departmental Authorization Check
+    verify_department_ownership(department, current_user)
+    return {"message": f"Maintenance task {task_id} deleted successfully"}

@@ -1,0 +1,22 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/ai-priority/page": "app/ai-priority/page.js",
+  "/alerts/page": "app/alerts/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/copilot/page": "app/copilot/page.js",
+  "/block-planner/page": "app/block-planner/page.js",
+  "/gantt/page": "app/gantt/page.js",
+  "/gis-map/page": "app/gis-map/page.js",
+  "/digital-twin/page": "app/digital-twin/page.js",
+  "/login/page": "app/login/page.js",
+  "/operations/page": "app/operations/page.js",
+  "/optimization-impact/page": "app/optimization-impact/page.js",
+  "/maintenance/page": "app/maintenance/page.js",
+  "/page": "app/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/monthly-planner/page": "app/monthly-planner/page.js",
+  "/reports/page": "app/reports/page.js",
+  "/weekly-planner/page": "app/weekly-planner/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/train-impact/page": "app/train-impact/page.js"
+}

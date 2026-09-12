@@ -23,7 +23,7 @@
 
 ### 1. Environment Setup
 ```bash
-cd backend
+cd backendcd
 python -m venv .venv
 ```
 Windows:

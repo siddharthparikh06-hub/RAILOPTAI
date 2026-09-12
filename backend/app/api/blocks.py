@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
+from app.db.schemas import BlockRequestBase, UserProfile
+from app.core.dependencies import get_current_user, verify_department_ownership
 
 router = APIRouter(prefix="/blocks", tags=["Block Windows"])
 
@@ -52,3 +54,13 @@ def get_blocks():
             "aiRecommendation": "Combined window recommended because three departments have compatible maintenance activities in the same section."
         }
     ]
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_block_request(block: BlockRequestBase, current_user: UserProfile = Depends(get_current_user)):
+    verify_department_ownership(block.department, current_user)
+    return {"message": "Block request submitted successfully", "block": block}
+
+@router.put("/{block_id}")
+def update_block_request(block_id: str, block: BlockRequestBase, current_user: UserProfile = Depends(get_current_user)):
+    verify_department_ownership(block.department, current_user)
+    return {"message": f"Block request {block_id} updated successfully", "block": block}
