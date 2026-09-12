@@ -32,7 +32,7 @@ export default function KPICard({ title, value, change, isPositive = true, icon:
     <motion.div
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className={`group relative h-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 space-y-2 shadow-xl hover:border-slate-700 transition-all duration-300 ${currentTheme.glow} ${href ? 'cursor-pointer focus-within:ring-2 focus-within:ring-blue-500/60' : ''}`}
+      className={`group relative h-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 shadow-xl hover:border-slate-700 transition-all duration-300 ${currentTheme.glow} ${href ? 'cursor-pointer focus-within:ring-2 focus-within:ring-blue-500/60' : ''}`}
     >
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">{title}</span>

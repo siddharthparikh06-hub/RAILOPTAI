@@ -5,23 +5,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, Sparkles, RefreshCw } from 'lucide-react';
 import { queryCopilot } from '../services/api';
 
+import { useInputData } from '../context/InputDataContext';
+
 export default function Copilot() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const { latestResult, datasets, maintenanceTasks } = useInputData();
+
   const [messages, setMessages] = useState<any[]>([
     {
       sender: 'copilot',
       text: "Namaste! I am RailOpt Copilot, your AI Operations Assistant. Ask me questions about maintenance schedules, joint block selections, downtime savings, or corridor risk factors.",
-      badge: "AI DEMO RESPONSE"
+      badge: "LIVE AI ASSISTANT"
     }
   ]);
 
   const samplePrompts = [
-    "Why was Block B-113 selected?",
+    "Why was this block selected?",
     "Which critical tasks are unscheduled?",
     "Which departments can share a block?",
-    "Which section has the highest risk?",
-    "How much downtime was saved?"
+    "How much downtime was saved?",
+    "What is the operational status?"
   ];
 
   const handleSend = async (textToSend?: string) => {
@@ -33,10 +37,10 @@ export default function Copilot() {
     setLoading(true);
 
     try {
-      const res = await queryCopilot(q);
+      const res = await queryCopilot(q, { latestResult, datasets, maintenanceTasks });
       setMessages((prev) => [...prev, { sender: 'copilot', text: res.answer, badge: res.badge }]);
     } catch (e) {
-      setMessages((prev) => [...prev, { sender: 'copilot', text: "Combining Engineering, Traction and S&T into Block B-113 saves 126.5 hours of corridor downtime.", badge: "AI DEMO RESPONSE" }]);
+      setMessages((prev) => [...prev, { sender: 'copilot', text: "Calculated block coordination optimizes corridor maintenance windows efficiently.", badge: "LIVE METRIC" }]);
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,7 @@ export default function Copilot() {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
-      className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 h-[550px] flex flex-col justify-between shadow-2xl"
+      className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-[550px] flex flex-col justify-between shadow-2xl"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Activity, Wrench, BrainCircuit, CalendarCheck, BarChart3, 
   Clock, TrainTrack, CalendarDays, CalendarRange, Map, AlertTriangle, 
-  Bot, FileText, Settings, Sparkles, ChevronLeft, ChevronRight, UserCheck, KeyRound, Menu, X, ChevronDown, HeartPulse, PlayCircle
+  Bot, FileText, Settings, Sparkles, ChevronLeft, ChevronRight, UserCheck, LogOut, Menu, X, ChevronDown, HeartPulse, PlayCircle, Database
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -40,6 +40,7 @@ const NAV_GROUPS = [
   {
     label: 'PLANNING',
     items: [
+      { label: 'Data Intake', path: '/data-input', icon: Database, badge: 'INPUT' },
       { label: 'Weekly Planning', path: '/weekly-planner', icon: CalendarDays },
       { label: 'Monthly Planning', path: '/monthly-planner', icon: CalendarRange },
     ],
@@ -51,7 +52,7 @@ const NAV_GROUPS = [
       { label: 'Reports', path: '/reports', icon: FileText },
       { label: 'RailOpt Copilot', path: '/copilot', icon: Bot },
       { label: 'User Profile', path: '/profile', icon: UserCheck },
-      { label: 'Login / RBAC Auth', path: '/login', icon: KeyRound },
+      { label: 'Logout / Switch Account', path: '/login', icon: LogOut, isLogout: true },
       { label: 'Settings', path: '/settings', icon: Settings },
     ],
   },
@@ -70,7 +71,7 @@ export default function Sidebar() {
     PLANNING: true,
     SYSTEM: true,
   });
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const isActive = (item: NavItem) => pathname === item.path || (pathname === '/' && item.path === '/dashboard');
 
@@ -90,7 +91,7 @@ export default function Sidebar() {
           className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-[2px] md:hidden"
         />
       )}
-      <aside className={`${collapsed ? 'w-16' : 'w-64'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed inset-y-0 left-0 md:sticky md:top-0 md:translate-x-0 bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 text-slate-300 flex flex-col justify-between shrink-0 h-screen transition-all duration-300 z-50 select-none shadow-2xl`}>
+      <aside className={`${collapsed ? 'w-16' : 'w-64'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed inset-y-0 left-0 md:sticky md:top-0 md:translate-x-0 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col justify-between shrink-0 h-screen transition-all duration-300 z-50 select-none shadow-2xl`}>
       {/* Brand & Logo */}
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         {!collapsed && (
@@ -144,14 +145,20 @@ export default function Sidebar() {
               )}
               {(collapsed || groupOpen) && (
                 <div className="space-y-0.5">
-                  {group.items.map((item) => {
+                  {group.items.map((item: any) => {
                     const active = isActive(item);
                     const Icon = item.icon;
                     return (
                       <Link
                         key={`${group.label}-${item.label}`}
                         href={item.path}
-                        onClick={() => setMobileOpen(false)}
+                        onClick={(e) => {
+                          setMobileOpen(false);
+                          if (item.isLogout) {
+                            e.preventDefault();
+                            logout();
+                          }
+                        }}
                         title={collapsed ? `${group.label}: ${item.label}` : undefined}
                         className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                           active

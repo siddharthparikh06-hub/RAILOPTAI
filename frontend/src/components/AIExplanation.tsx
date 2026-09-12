@@ -12,7 +12,7 @@ interface AIExplanationProps {
 export default function AIExplanation({ task }: AIExplanationProps) {
   if (!task) {
     return (
-      <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 text-center text-slate-400 space-y-2 font-mono text-xs shadow-xl">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-slate-400 space-y-2 font-mono text-xs shadow-xl">
         <BrainCircuit className="w-8 h-8 text-slate-600 mx-auto animate-pulse" />
         <p>Select any maintenance task to inspect its AI priority risk breakdown.</p>
       </div>
@@ -27,7 +27,7 @@ export default function AIExplanation({ task }: AIExplanationProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -15 }}
         transition={{ duration: 0.3 }}
-        className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl"
+        className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl"
       >
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center space-x-2">

@@ -6,7 +6,7 @@ router = APIRouter(prefix="/copilot", tags=["RailOpt Copilot"])
 
 @router.post("/query", response_model=CopilotQueryResponse)
 def query_copilot(request: CopilotQueryRequest):
-    res = process_copilot_query(request.question)
+    res = process_copilot_query(request.question, request.context)
     return CopilotQueryResponse(
         answer=res["answer"],
         badge=res["badge"],

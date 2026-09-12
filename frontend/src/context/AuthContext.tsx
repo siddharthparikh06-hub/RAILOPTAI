@@ -53,16 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('railopt_user');
         localStorage.removeItem('railopt_token');
       }
-    } else {
-      // Default initial session for SIH presentation
-      const defaultUser: User = {
-        employee_id: 'ENG001',
-        name: 'Demo Engineering Officer',
-        department: 'Engineering / P-Way',
-        role: 'ENGINEERING'
-      };
-      setUser(defaultUser);
-      setToken('demo_token_eng001');
     }
     setIsLoading(false);
   }, []);

@@ -204,7 +204,7 @@ export default function ExecutiveDashboard() {
       {/* Charts Grid */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Weekly Block Utilization Area Chart (8 cols) */}
-        <div className="lg:col-span-8 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-white">Weekly Block Utilization (Hours)</h3>
@@ -251,7 +251,7 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* Department Workload Distribution (4 cols) */}
-        <div className="lg:col-span-4 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
           <div>
             <h3 className="text-sm font-bold text-white">Department Maintenance Workload</h3>
             <p className="text-[11px] text-slate-400">Engineering, Traction, and S&amp;T Share</p>
@@ -282,7 +282,7 @@ export default function ExecutiveDashboard() {
       {/* Critical Alerts & Recent Optimization Runs Grid */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Critical Maintenance Alerts (6 cols) */}
-        <div className="lg:col-span-6 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
+        <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -312,7 +312,7 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* Recent Optimization Runs (6 cols) */}
-        <div className="lg:col-span-6 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
+        <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Cpu className="w-4 h-4 text-blue-400" />
