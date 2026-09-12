@@ -6,6 +6,8 @@ import { Clock, CheckCircle2 } from 'lucide-react';
 import BlockDetailsDrawer from './BlockDetailsDrawer';
 import { BlockWindow, CorridorConflict, MaintenanceTask, Section, TrainMovement, mockBlockWindows, mockConflicts, mockMaintenanceTasks, mockSections, mockTrainMovements } from '../data/mockData';
 
+import { useInputData } from '../context/InputDataContext';
+
 interface BlockTimelineProps {
   section: Section;
   blocks: BlockWindow[];
@@ -22,7 +24,30 @@ export default function BlockTimeline({
   conflicts = mockConflicts.filter((conflict) => conflict.sectionId === mockSections[2].id),
 }: Partial<BlockTimelineProps>) {
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const { latestResult, datasets } = useInputData();
   useEffect(() => setSelectedBlock(null), [section.id]);
+
+  let activeBlocks = blocks;
+  if (latestResult && Array.isArray(latestResult.assignments) && latestResult.assignments.length > 0) {
+    activeBlocks = latestResult.assignments.map((ass: any, idx: number) => {
+      const parts = String(ass.start || '').split(' ');
+      const rawTime = parts.length > 1 ? parts[1] : '08:00';
+      return {
+        id: `opt-block-${idx}`,
+        blockCode: `BLOCK ${ass.task_code || `B-${idx + 100}`}`,
+        sectionId: ass.section_id || 'S-14',
+        sectionName: `Section ${ass.section_id || 'S-14'}`,
+        startTime: rawTime,
+        endTime: ass.end ? ass.end.split(' ')[1] || '10:00' : '10:00',
+        durationHrs: Number(ass.duration_hours || 2),
+        departments: [ass.department || 'Engineering'],
+        taskCount: 1,
+        trainImpactPct: 0,
+        conflictAvoided: true,
+        status: 'APPROVED'
+      };
+    });
+  }
 
   const departments = [
     { name: 'Engineering (P-Way)', match: 'Engineering', labelClass: 'text-blue-400', dotClass: 'bg-blue-500', blockClass: 'bg-blue-600 hover:bg-blue-500 border-blue-400/40' },
@@ -65,7 +90,7 @@ export default function BlockTimeline({
           <p className="text-[11px] text-slate-400">Coordinated Multi-Departmental Maintenance Windows</p>
         </div>
         <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full font-bold shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-          {blocks.length} CORRIDOR BLOCKS
+          {activeBlocks.length} CORRIDOR BLOCKS
         </span>
       </div>
 
@@ -88,10 +113,10 @@ export default function BlockTimeline({
         <span className="w-[14.2%] text-left">20:00</span>
       </div>
 
-      {blocks.length === 0 ? (
+      {activeBlocks.length === 0 ? (
         <div className="min-w-[700px] rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-8 text-center text-xs text-slate-400">No active maintenance blocks for {section.code}.</div>
       ) : departments.map((department) => {
-        const departmentBlocks = blocks.filter((block) => block.departments.some((name) => name.includes(department.match)));
+        const departmentBlocks = activeBlocks.filter((block) => block.departments.some((name) => name.includes(department.match)));
         return <div key={department.match} className="flex items-center space-x-4 min-w-[700px]">
           <div className={`w-40 shrink-0 font-mono text-xs font-bold ${department.labelClass} flex items-center gap-2`}>
             <span className={`w-2.5 h-2.5 rounded-full ${department.dotClass}`} />{department.name}

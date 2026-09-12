@@ -1,0 +1,5 @@
+crew_id,department,shift_start,shift_end,section_id,equipment
+CREW-ENG-01,Engineering,00:00,08:00,S-14,Track Tamper CSM-09
+CREW-TRD-01,Traction,00:00,08:00,S-14,Tower Car TC-04
+CREW-ST-01,Signal & Telecom,00:00,08:00,S-14,S&T Testing Van
+CREW-ENG-02,Engineering,08:00,16:00,S-12,Rail Grinding Unit

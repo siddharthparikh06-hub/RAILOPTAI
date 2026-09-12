@@ -7,16 +7,53 @@ import AIExplanation from '@/components/AIExplanation';
 import { getMaintenanceTasks } from '@/services/api';
 import { MaintenanceTask } from '@/data/mockData';
 
+import { useInputData } from '@/context/InputDataContext';
+
 export default function AIPriorityEnginePage() {
-  const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
+  const [apiTasks, setApiTasks] = useState<MaintenanceTask[]>([]);
   const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
+  const { maintenanceTasks: localTasks, datasets } = useInputData();
 
   useEffect(() => {
-    getMaintenanceTasks().then((data) => {
-      setTasks(data);
-      if (data.length > 0) setSelectedTask(data[0]);
-    });
+    getMaintenanceTasks().then(setApiTasks);
   }, []);
+
+  const importedTasks: MaintenanceTask[] = (datasets.maintenance || []).map((row, idx) => {
+    const rawCrit = String(row.criticality || 'Medium').trim();
+    const critCapitalized = (rawCrit.charAt(0).toUpperCase() + rawCrit.slice(1).toLowerCase()) as MaintenanceTask['criticality'];
+    const validCrit = ['Critical', 'High', 'Medium', 'Low'].includes(critCapitalized) ? critCapitalized : 'Medium';
+    const priorityScore = row.priority_score ? Number(row.priority_score) : ({ Critical: 90, High: 75, Medium: 60, Low: 40 }[validCrit] || 50);
+
+    return {
+      id: `imported-ai-${idx}-${row.task_code || idx}`,
+      taskCode: row.task_code || `TASK-${idx + 100}`,
+      department: (row.department || 'Engineering') as MaintenanceTask['department'],
+      asset: row.asset || 'Corridor Asset',
+      assetId: row.asset_id || `ASSET-${row.section_id || 'S1'}`,
+      sectionId: row.section_id || 'S-14',
+      issue: row.issue || row.work_description || `${row.department || 'Maintenance'} Activity`,
+      criticality: validCrit,
+      dueDate: row.deadline || row.due_date || '2026-09-20',
+      durationHrs: Number(row.duration_hours || 2),
+      crewRequired: Number(row.crew_required || 4),
+      priorityScore,
+      status: validCrit === 'Critical' ? 'Critical' : 'Pending',
+      aiReasons: ['Data Intake CSV/Excel record', `Priority score: ${priorityScore}/100`, `Corridor Section: ${row.section_id}`],
+      aiRecommendation: 'High priority maintenance item prioritized for upcoming block schedule window.'
+    };
+  });
+
+  const allTasks = [...localTasks, ...importedTasks, ...apiTasks].sort((a, b) => b.priorityScore - a.priorityScore);
+
+  useEffect(() => {
+    if (allTasks.length > 0 && !selectedTask) {
+      setSelectedTask(allTasks[0]);
+    }
+  }, [allTasks.length]);
+
+  const criticalCount = allTasks.filter(t => t.criticality === 'Critical').length;
+  const highCount = allTasks.filter(t => t.criticality === 'High').length;
+  const normalCount = allTasks.filter(t => t.criticality === 'Medium' || t.criticality === 'Low').length;
 
   return (
     <div className="space-y-6">
@@ -31,7 +68,7 @@ export default function AIPriorityEnginePage() {
         </div>
 
         <span className="px-3 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono text-xs font-bold">
-          AI DEMO — Simulated Priority Model
+          LIVE DATA PRIORITY MODEL
         </span>
       </div>
 
@@ -39,22 +76,22 @@ export default function AIPriorityEnginePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-xs">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-1 shadow-md">
           <div className="text-slate-400">Tasks Analyzed</div>
-          <div className="text-3xl font-black text-white">248</div>
+          <div className="text-3xl font-black text-white">{allTasks.length}</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-1 shadow-md">
           <div className="text-slate-400">Critical Risk</div>
-          <div className="text-3xl font-black text-rose-400">31</div>
+          <div className="text-3xl font-black text-rose-400">{criticalCount}</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-1 shadow-md">
           <div className="text-slate-400">High Risk</div>
-          <div className="text-3xl font-black text-amber-400">67</div>
+          <div className="text-3xl font-black text-amber-400">{highCount}</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-1 shadow-md">
           <div className="text-slate-400">Normal Priority</div>
-          <div className="text-3xl font-black text-blue-400">150</div>
+          <div className="text-3xl font-black text-blue-400">{normalCount}</div>
         </div>
       </div>
 
@@ -76,7 +113,7 @@ export default function AIPriorityEnginePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {tasks.map((t) => (
+                {allTasks.map((t) => (
                   <tr
                     key={t.id}
                     onClick={() => setSelectedTask(t)}

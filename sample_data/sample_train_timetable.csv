@@ -1,0 +1,7 @@
+train_number,train_name,section_id,planned_entry,planned_exit,priority,direction
+12625,Kerala Superfast Express,S-14,06:00,07:15,1,UP
+20607,Vande Bharat Express,S-14,08:30,09:30,1,DOWN
+12626,Kerala Express Down,S-14,12:00,13:15,1,DOWN
+22637,West Coast SF Express,S-12,07:00,08:30,2,UP
+12658,Chennai Mail,S-12,14:00,15:30,1,DOWN
+16115,Tirukkural Express,S-10,09:00,10:30,2,UP

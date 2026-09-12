@@ -15,13 +15,38 @@ export default function MaintenanceManagementPage() {
   const [search, setSearch] = useState('');
   const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
   const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'schedule' | null>(null);
-  const { maintenanceTasks: localTasks } = useInputData();
+  const { maintenanceTasks: localTasks, datasets } = useInputData();
 
   useEffect(() => {
     getMaintenanceTasks().then(setTasks);
   }, []);
 
-  const allTasks = [...localTasks, ...tasks];
+  const importedMaintenanceTasks: MaintenanceTask[] = (datasets.maintenance || []).map((row, idx) => {
+    const rawCrit = String(row.criticality || 'Medium').trim();
+    const critCapitalized = (rawCrit.charAt(0).toUpperCase() + rawCrit.slice(1).toLowerCase()) as MaintenanceTask['criticality'];
+    const validCrit = ['Critical', 'High', 'Medium', 'Low'].includes(critCapitalized) ? critCapitalized : 'Medium';
+    const priorityScore = row.priority_score ? Number(row.priority_score) : ({ Critical: 90, High: 75, Medium: 60, Low: 40 }[validCrit] || 50);
+
+    return {
+      id: `imported-maint-${idx}-${row.task_code || idx}`,
+      taskCode: row.task_code || `TASK-${idx + 100}`,
+      department: (row.department || 'Engineering') as MaintenanceTask['department'],
+      asset: row.asset || 'Corridor Asset',
+      assetId: row.asset_id || `ASSET-${row.section_id || 'S1'}`,
+      sectionId: row.section_id || 'S-14',
+      issue: row.issue || row.work_description || `${row.department || 'Maintenance'} Activity`,
+      criticality: validCrit,
+      dueDate: row.deadline || row.due_date || '2026-09-20',
+      durationHrs: Number(row.duration_hours || 2),
+      crewRequired: Number(row.crew_required || 4),
+      priorityScore,
+      status: validCrit === 'Critical' ? 'Critical' : 'Pending',
+      aiReasons: ['Imported via Data Intake file', `Section: ${row.section_id}`],
+      aiRecommendation: 'Awaiting block schedule allocation.'
+    };
+  });
+
+  const allTasks = [...localTasks, ...importedMaintenanceTasks, ...tasks];
 
   const filteredTasks = allTasks.filter((t) => {
     if (department !== 'ALL' && t.department !== department) return false;

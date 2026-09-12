@@ -190,6 +190,7 @@ class SimulationResponse(BaseModel):
 # --- Copilot Schemas ---
 class CopilotQueryRequest(BaseModel):
     question: str
+    context: Optional[dict] = None
 
 class CopilotQueryResponse(BaseModel):
     answer: str

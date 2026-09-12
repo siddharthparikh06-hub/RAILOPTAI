@@ -1,0 +1,4 @@
+section_id,start_station,end_station,line_type,capacity,permitted_block_start,permitted_block_end
+S-14,Chennai Central,Arakkonam,Double Line,80,00:00,24:00
+S-12,Arakkonam,Katpadi,Double Line,75,00:00,24:00
+S-10,Katpadi,Jolarpettai,Double Line,70,00:00,24:00

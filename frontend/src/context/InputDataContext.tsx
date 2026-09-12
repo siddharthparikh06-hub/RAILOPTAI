@@ -14,34 +14,51 @@ export interface ImportedRecord {
 }
 export type ImportedRow = Record<string, string>;
 
-interface InputDataContextValue {
+export interface InputDataContextValue {
   maintenanceTasks: MaintenanceTask[];
   imports: ImportedRecord[];
   datasets: Record<ImportType, ImportedRow[]>;
+  latestResult: any | null;
   addMaintenanceTask: (task: Omit<MaintenanceTask, 'id' | 'taskCode' | 'priorityScore' | 'status' | 'aiReasons' | 'aiRecommendation'> & { priorityScore?: number }) => void;
   registerImport: (type: ImportType, name: string, rows: ImportedRow[]) => void;
+  removeImport: (id: string) => void;
+  clearAllImports: () => void;
+  setLatestResult: (result: any) => void;
 }
 
 const InputDataContext = createContext<InputDataContextValue | null>(null);
 const TASKS_KEY = 'railopt-local-maintenance-tasks';
 const IMPORTS_KEY = 'railopt-local-imports';
 const DATASETS_KEY = 'railopt-local-datasets';
+const RESULT_KEY = 'railopt-latest-optimization-result';
 const emptyDatasets: Record<ImportType, ImportedRow[]> = { maintenance: [], timetable: [], sections: [], crews: [] };
 
 export function InputDataProvider({ children }: { children: React.ReactNode }) {
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
   const [imports, setImports] = useState<ImportedRecord[]>([]);
   const [datasets, setDatasets] = useState<Record<ImportType, ImportedRow[]>>(emptyDatasets);
+  const [latestResult, setLatestResultState] = useState<any | null>(null);
 
   useEffect(() => {
     try {
       setMaintenanceTasks(JSON.parse(window.localStorage.getItem(TASKS_KEY) || '[]'));
       setImports(JSON.parse(window.localStorage.getItem(IMPORTS_KEY) || '[]'));
       setDatasets({ ...emptyDatasets, ...JSON.parse(window.localStorage.getItem(DATASETS_KEY) || '{}') });
+      const savedResult = window.localStorage.getItem(RESULT_KEY);
+      if (savedResult) setLatestResultState(JSON.parse(savedResult));
     } catch {
       // Invalid local demo data should not stop the control-room UI from loading.
     }
   }, []);
+
+  const setLatestResult = (result: any) => {
+    setLatestResultState(result);
+    try {
+      window.localStorage.setItem(RESULT_KEY, JSON.stringify(result));
+    } catch {
+      // Storage quota safety
+    }
+  };
 
   const addMaintenanceTask = (task: Omit<MaintenanceTask, 'id' | 'taskCode' | 'priorityScore' | 'status' | 'aiReasons' | 'aiRecommendation'> & { priorityScore?: number }) => {
     const nextTask: MaintenanceTask = {
@@ -74,7 +91,38 @@ export function InputDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const value = useMemo(() => ({ maintenanceTasks, imports, datasets, addMaintenanceTask, registerImport }), [maintenanceTasks, imports, datasets]);
+  const removeImport = (id: string) => {
+    setImports((current) => {
+      const itemToRemove = current.find((item) => item.id === id);
+      const nextImports = current.filter((item) => item.id !== id);
+      window.localStorage.setItem(IMPORTS_KEY, JSON.stringify(nextImports));
+
+      if (itemToRemove) {
+        const remainingOfType = nextImports.filter((item) => item.type === itemToRemove.type);
+        if (remainingOfType.length === 0) {
+          setDatasets((currDatasets) => {
+            const nextDatasets = { ...currDatasets, [itemToRemove.type]: [] };
+            window.localStorage.setItem(DATASETS_KEY, JSON.stringify(nextDatasets));
+            return nextDatasets;
+          });
+        }
+      }
+      return nextImports;
+    });
+  };
+
+  const clearAllImports = () => {
+    setImports([]);
+    setDatasets(emptyDatasets);
+    setMaintenanceTasks([]);
+    setLatestResultState(null);
+    window.localStorage.removeItem(IMPORTS_KEY);
+    window.localStorage.removeItem(DATASETS_KEY);
+    window.localStorage.removeItem(TASKS_KEY);
+    window.localStorage.removeItem(RESULT_KEY);
+  };
+
+  const value = useMemo(() => ({ maintenanceTasks, imports, datasets, latestResult, addMaintenanceTask, registerImport, removeImport, clearAllImports, setLatestResult }), [maintenanceTasks, imports, datasets, latestResult]);
   return <InputDataContext.Provider value={value}>{children}</InputDataContext.Provider>;
 }
 
