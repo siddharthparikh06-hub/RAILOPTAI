@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Wrench, Search, Plus, Filter, Eye, Edit2, Calendar, X } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import { getMaintenanceTasks } from '@/services/api';
 import { MaintenanceTask } from '@/data/mockData';
+import { useInputData } from '@/context/InputDataContext';
 
 export default function MaintenanceManagementPage() {
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
@@ -13,12 +15,15 @@ export default function MaintenanceManagementPage() {
   const [search, setSearch] = useState('');
   const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
   const [dialogMode, setDialogMode] = useState<'view' | 'edit' | 'schedule' | null>(null);
+  const { maintenanceTasks: localTasks } = useInputData();
 
   useEffect(() => {
     getMaintenanceTasks().then(setTasks);
   }, []);
 
-  const filteredTasks = tasks.filter((t) => {
+  const allTasks = [...localTasks, ...tasks];
+
+  const filteredTasks = allTasks.filter((t) => {
     if (department !== 'ALL' && t.department !== department) return false;
     if (criticality !== 'ALL' && t.criticality !== criticality) return false;
     if (search && !t.taskCode.toLowerCase().includes(search.toLowerCase()) && !t.issue.toLowerCase().includes(search.toLowerCase())) return false;
@@ -42,13 +47,13 @@ export default function MaintenanceManagementPage() {
           <p className="text-xs text-slate-400">Engineering, Traction (OHE), and Signal &amp; Telecom Tasks</p>
         </div>
 
-        <button 
-          onClick={() => { setSelectedTask(tasks[0]); setDialogMode('edit'); }}
+        <Link
+          href="/data-input"
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg shadow-blue-600/20 transition-all font-mono"
         >
           <Plus className="w-4 h-4" />
           <span>New Maintenance Task</span>
-        </button>
+        </Link>
       </div>
 
       {/* Filters Bar */}

@@ -47,7 +47,7 @@ export default function Copilot() {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
-      className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 h-[550px] flex flex-col justify-between shadow-2xl"
+      className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-[550px] flex flex-col justify-between shadow-2xl"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">

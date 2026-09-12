@@ -35,7 +35,7 @@ export default function RailwayMap({
   }));
 
   return (
-    <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 h-[520px] relative overflow-hidden flex flex-col justify-between shadow-2xl">
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 h-[520px] relative overflow-hidden flex flex-col justify-between shadow-2xl">
       {/* Top Banner */}
       <div className="flex flex-wrap items-center justify-between gap-2 z-10 font-mono text-xs">
         <div className="flex items-center space-x-2">

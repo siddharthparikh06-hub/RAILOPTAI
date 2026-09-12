@@ -5,6 +5,7 @@ import Topbar from '@/components/Topbar';
 import OperationalStatus from '@/components/OperationalStatus';
 import { DemoProvider } from '@/context/DemoContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { InputDataProvider } from '@/context/InputDataContext';
 
 export const metadata: Metadata = {
   title: 'RAILOPT AI — AI-Powered Railway Maintenance & Block Optimization',
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
         <AuthProvider>
+          <InputDataProvider>
           <DemoProvider>
             <Topbar />
             <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -30,6 +32,7 @@ export default function RootLayout({
               </main>
             </div>
           </DemoProvider>
+          </InputDataProvider>
         </AuthProvider>
       </body>
     </html>

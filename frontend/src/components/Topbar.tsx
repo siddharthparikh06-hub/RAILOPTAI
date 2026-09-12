@@ -71,7 +71,7 @@ export default function Topbar() {
   };
 
   return (
-    <header className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md z-[100] sticky top-0 min-h-[4rem]">
+    <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md z-[100] sticky top-0 min-h-[4rem]">
       {/* Left: Division & Date */}
       <div className="flex min-w-0 items-center space-x-2 sm:space-x-3">
         <div className="flex min-w-0 items-center space-x-2 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs font-mono sm:px-3">

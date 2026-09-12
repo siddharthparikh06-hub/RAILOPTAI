@@ -123,16 +123,21 @@ export async function getTrainMovements(): Promise<TrainMovement[]> {
   return fetchFromApi('/movements', mockTrainMovements);
 }
 
-export async function runOptimizationSimulation(horizon: string, division: string, objective: string) {
-  try {
+export interface OptimizationInput { tasks: Record<string, string | number>[]; train_movements: Record<string, string>[]; sections: Record<string, string>[]; crews: Record<string, string>[]; }
+
+export async function runOptimizationSimulation(horizon: string, division: string, objective: string, input: OptimizationInput) {
+    const days = Number.parseInt(horizon, 10);
     const res = await fetch(`${API_BASE_URL}/optimization/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ horizon_days: 7, division, objective })
+      body: JSON.stringify({ horizon_days: Number.isFinite(days) ? days : 7, division, objective, ...input })
     });
-    if (res.ok) {
-      const data = await res.json();
-      return {
+    if (!res.ok) {
+      const detail = await res.json().catch(() => null);
+      throw new Error(detail?.detail || `Calculation service returned ${res.status}.`);
+    }
+    const data = await res.json();
+    return {
         status: data.status,
         tasksConsidered: data.tasks_considered,
         availableWindows: data.available_windows,
@@ -140,24 +145,10 @@ export async function runOptimizationSimulation(horizon: string, division: strin
         recommendedBlocks: data.recommended_blocks,
         estimatedDowntimeSavedHrs: data.downtime_saved_hours,
         estimatedTrainImpactReductionPct: data.train_impact_reduction_pct,
-        assetAvailabilityScore: data.asset_availability_score
-      };
-    }
-  } catch (e) {
-    // Fallback
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 3500));
-  return {
-    status: 'OPTIMIZATION COMPLETE',
-    tasksConsidered: 248,
-    availableWindows: 96,
-    conflictsDetected: 37,
-    recommendedBlocks: 41,
-    estimatedDowntimeSavedHrs: 126.5,
-    estimatedTrainImpactReductionPct: 18.4,
-    assetAvailabilityScore: 94.7
-  };
+      assetAvailabilityScore: data.asset_availability_score,
+      assignments: data.assignments || [],
+      inputValidation: data.input_validation || {}
+    };
 }
 
 export async function queryCopilot(question: string) {
