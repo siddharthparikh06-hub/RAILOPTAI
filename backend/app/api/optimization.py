@@ -7,9 +7,12 @@ router = APIRouter(prefix="/optimization", tags=["Optimization Engine"])
 @router.post("/generate", response_model=OptimizationResultResponse)
 def generate_optimization(request: OptimizationGenerateRequest):
     res = optimizer.solve_block_schedule(
-        tasks=[], 
+        tasks=request.tasks,
         horizon_days=request.horizon_days, 
-        objective=request.objective
+        objective=request.objective,
+        train_movements=request.train_movements,
+        sections=request.sections,
+        crews=request.crews,
     )
     return OptimizationResultResponse(
         status=res["status"],
@@ -22,5 +25,7 @@ def generate_optimization(request: OptimizationGenerateRequest):
         asset_availability_score=res["asset_availability_score"],
         baseline=res["baseline"],
         optimized=res["optimized"],
-        improvement=res["improvement"]
+        improvement=res["improvement"],
+        assignments=res.get("assignments", []),
+        input_validation=res.get("input_validation", {}),
     )

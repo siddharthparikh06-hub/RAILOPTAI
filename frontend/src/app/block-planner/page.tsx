@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import OptimizationProgress from '@/components/OptimizationProgress';
 import { runOptimizationSimulation } from '@/services/api';
+import { useInputData } from '@/context/InputDataContext';
 
 export default function AutomaticBlockPlannerPage() {
   const [horizon, setHorizon] = useState('7 Days');
@@ -17,8 +18,20 @@ export default function AutomaticBlockPlannerPage() {
   const [optimizing, setOptimizing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { maintenanceTasks: localTasks, imports, datasets } = useInputData();
 
   const handleStartOptimization = () => {
+    setError(null);
+    setResult(null);
+    if (!datasets.sections.length) {
+      setError('Import a Section Master CSV before running a calculation.');
+      return;
+    }
+    if (!localTasks.length && !datasets.maintenance.length) {
+      setError('Enter a maintenance request or import a Maintenance Tasks CSV before running a calculation.');
+      return;
+    }
     setOptimizing(true);
     setCompleted(false);
   };
@@ -26,8 +39,13 @@ export default function AutomaticBlockPlannerPage() {
   const handleProgressComplete = async () => {
     setOptimizing(false);
     setCompleted(true);
-    const res = await runOptimizationSimulation(horizon, division, objective);
-    setResult(res);
+    try {
+      const manualTasks = localTasks.map((task) => ({ task_code: task.taskCode, department: task.department, asset: task.asset, section_id: task.sectionId, duration_hours: task.durationHrs, deadline: task.dueDate, criticality: task.criticality, crew_required: task.crewRequired }));
+      const res = await runOptimizationSimulation(horizon, division, objective, { tasks: [...manualTasks, ...datasets.maintenance], train_movements: datasets.timetable, sections: datasets.sections, crews: datasets.crews });
+      setResult({ ...res, inputTasks: manualTasks.length + datasets.maintenance.length, importedFiles: imports.length });
+    } catch (calculationError) {
+      setError(calculationError instanceof Error ? calculationError.message : 'The calculation service could not be reached.');
+    }
   };
 
   return (
@@ -46,6 +64,8 @@ export default function AutomaticBlockPlannerPage() {
           MAIN DEMO FEATURE
         </span>
       </div>
+
+      {error && <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
 
       {/* Inputs & Controls Panel */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6 shadow-xl">
@@ -165,6 +185,10 @@ export default function AutomaticBlockPlannerPage() {
               <div className="text-2xl font-black text-cyan-400 mt-1">-{result.estimatedTrainImpactReductionPct}%</div>
             </div>
           </div>
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-xs text-slate-300">
+            <span className="font-bold text-blue-300">Validated input:</span> {result.inputValidation?.valid_tasks || result.inputTasks} task(s), {result.inputValidation?.sections || 0} section(s), and {result.inputValidation?.train_movements || 0} train movement(s). {result.inputValidation?.rejected_rows ? `${result.inputValidation.rejected_rows} row(s) were rejected.` : 'No input rows were rejected.'}
+          </div>
+          {result.assignments?.length > 0 && <div className="overflow-x-auto rounded-xl border border-slate-800"><table className="w-full text-left font-mono text-xs"><thead className="bg-slate-950 text-slate-400"><tr><th className="p-3">Task</th><th className="p-3">Section</th><th className="p-3">Department</th><th className="p-3">Scheduled start</th><th className="p-3">Duration</th></tr></thead><tbody>{result.assignments.map((assignment: any) => <tr key={`${assignment.task_code}-${assignment.start}`} className="border-t border-slate-800"><td className="p-3 font-bold text-blue-300">{assignment.task_code}</td><td className="p-3">{assignment.section_id}</td><td className="p-3">{assignment.department}</td><td className="p-3">{assignment.start}</td><td className="p-3">{assignment.duration_hours}h</td></tr>)}</tbody></table></div>}
         </div>
       )}
     </div>

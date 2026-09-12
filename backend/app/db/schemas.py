@@ -154,6 +154,10 @@ class OptimizationGenerateRequest(BaseModel):
     horizon_days: int = 7
     division: str = "Chennai Demo Division"
     objective: str = "Maximize Asset Availability"
+    tasks: List[dict] = []
+    train_movements: List[dict] = []
+    sections: List[dict] = []
+    crews: List[dict] = []
 
 class OptimizationResultResponse(BaseModel):
     status: str = "OPTIMIZATION COMPLETE"
@@ -167,6 +171,8 @@ class OptimizationResultResponse(BaseModel):
     baseline: dict = {}
     optimized: dict = {}
     improvement: dict = {}
+    assignments: List[dict] = []
+    input_validation: dict = {}
 
 # --- Simulation Schemas ---
 class SimulationRequest(BaseModel):
